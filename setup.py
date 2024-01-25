@@ -21,7 +21,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Ada Lundhe",
     author_email="corpheus91@gmail.com",
-    url="https://github.com/datavant/werkflow",
+    url="https://github.com/scorbettUM/werkflow",
     packages=find_packages(),
     keywords=[
         'pypi', 

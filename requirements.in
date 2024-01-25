@@ -1,0 +1,11 @@
+click
+psutil
+distro
+pydantic
+networkx
+aiodns
+orjson
+aiologger
+yaspin
+art
+python-dotenv

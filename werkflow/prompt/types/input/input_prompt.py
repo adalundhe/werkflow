@@ -2,12 +2,12 @@ import click
 import asyncio
 import functools
 from typing import Dict, Type, Optional, Any, Callable, Union
-from werkflow.hooks.prompt.types.base.base_prompt import BasePrompt
-from werkflow.hooks.prompt.types.base.prompt_type import PromptType
-from .secure_prompt_validator import SecurePromptValidator
+from werkflow.prompt.types.base.base_prompt import BasePrompt
+from werkflow.prompt.types.base.prompt_type import PromptType
+from .input_prompt_validator import InputPromptValidator
 
 
-class SecurePrompt(BasePrompt):
+class InputPrompt(BasePrompt):
 
     def __init__(
         self, 
@@ -28,9 +28,9 @@ class SecurePrompt(BasePrompt):
             confirmation_message,
         )
 
-        validated_prompt = SecurePromptValidator(
+        validated_prompt = InputPromptValidator(
             prompt_data_type=data_type,
-            prompt_type=PromptType.SECURE
+            prompt_type=PromptType.INPUT
         )
 
         self.data_type = validated_prompt.prompt_data_type
@@ -48,7 +48,6 @@ class SecurePrompt(BasePrompt):
                 f'{self.prompt_frame} {self.message}',
                 type=self.data_type,
                 default=self.default,
-                hide_input=True,
                 prompt_suffix=''
             )
         )

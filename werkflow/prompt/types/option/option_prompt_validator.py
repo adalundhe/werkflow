@@ -3,7 +3,7 @@ from pydantic import (
     BaseModel,
     validator
 )
-from werkflow.hooks.prompt.types.base.prompt_type import PromptType
+from werkflow.prompt.types.base.prompt_type import PromptType
 
 
 class OptionPromptValidator(BaseModel):

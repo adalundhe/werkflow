@@ -2,7 +2,7 @@ import functools
 from typing import List, Callable, Dict, Any
 from werkflow.hooks.types.base.registrar import registrar
 from werkflow.hooks.types.base.hook_types import HookType
-from werkflow.hooks.prompt.types.base.base_prompt import BasePrompt
+from werkflow.prompt.types.base.base_prompt import BasePrompt
 from .validator import StepHookValidator
 
 @registrar(HookType.STEP)

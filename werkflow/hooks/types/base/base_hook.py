@@ -7,7 +7,7 @@ from typing import (
     List,
     Dict
 )
-from werkflow.hooks.prompt.types.base.base_prompt import BasePrompt
+from werkflow.prompt.types.base.base_prompt import BasePrompt
 from .hook_types import HookType
 
 

@@ -7,7 +7,7 @@ from pydantic import (
     validator
 )
 from typing import Union, Type, TypeVar
-from werkflow.hooks.prompt.types.base.prompt_type import PromptType
+from werkflow.prompt.types.base.prompt_type import PromptType
 
 T = TypeVar('T')
 

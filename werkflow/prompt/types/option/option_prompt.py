@@ -1,20 +1,20 @@
 import click
 import asyncio
 import functools
-from typing import Dict, Type, Optional, Any, Callable, Union
-from werkflow.hooks.prompt.types.base.base_prompt import BasePrompt
-from werkflow.hooks.prompt.types.base.prompt_type import PromptType
-from .input_prompt_validator import InputPromptValidator
+from typing import List, Dict, Optional, Any, Callable, Union
+from .option_prompt_validator import OptionPromptValidator
+from werkflow.prompt.types.base.base_prompt import BasePrompt
+from werkflow.prompt.types.base.prompt_type import PromptType
 
 
-class InputPrompt(BasePrompt):
+class OptionPrompt(BasePrompt):
 
     def __init__(
         self, 
         message: str, 
         skip: bool = False, 
+        options: List[str] = None, 
         result_key: str = None, 
-        data_type: Type = str,
         default: Optional[Any] = None, 
         condition: Optional[Callable[[Dict[str, Any]], bool]] = None, 
         confirmation_message: Optional[Union[str, Callable[..., str]]] = None, 
@@ -28,12 +28,15 @@ class InputPrompt(BasePrompt):
             confirmation_message,
         )
 
-        validated_prompt = InputPromptValidator(
-            prompt_data_type=data_type,
-            prompt_type=PromptType.INPUT
+        validated_prompt = OptionPromptValidator(
+            prompt_data_type=click.Choice(
+                options,
+                case_sensitive=False
+            ),
+            prompt_type=PromptType.OPTION
         )
 
-        self.data_type = validated_prompt.prompt_data_type
+        self.options = validated_prompt.prompt_data_type
         self.prompt_type = validated_prompt.prompt_type
         
 
@@ -46,8 +49,9 @@ class InputPrompt(BasePrompt):
             functools.partial(
                 click.prompt,
                 f'{self.prompt_frame} {self.message}',
-                type=self.data_type,
+                type=self.options,
                 default=self.default,
-                prompt_suffix=''
+                prompt_suffix='',
+                show_choices=True
             )
         )

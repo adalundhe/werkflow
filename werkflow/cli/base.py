@@ -61,5 +61,5 @@ class CLI(click.MultiCommand):
         with open(command_file) as f:
             code = compile(f.read(), command_file, 'exec')
             eval(code, ns, ns)
-
+        
         return ns.get(name)

@@ -1,7 +1,7 @@
 import click
 import functools
-from werkflow.hooks.prompt.types.base.base_prompt import BasePrompt
-from werkflow.hooks.prompt.types.base.prompt_type import PromptType
+from werkflow.prompt.types.base.base_prompt import BasePrompt
+from werkflow.prompt.types.base.prompt_type import PromptType
 from typing import Callable, Union, Optional, Any, Dict
 from .key_value_prompt_validator import KeyValuePromptValidator
 

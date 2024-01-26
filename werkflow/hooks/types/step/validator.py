@@ -1,5 +1,5 @@
 from pydantic import BaseModel, StrictStr, StrictBool
-from werkflow.hooks.prompt.types.base.base_prompt import BasePrompt
+from werkflow.prompt.types.base.base_prompt import BasePrompt
 from typing import Tuple, List, Optional, Callable, Dict, Any
 
 

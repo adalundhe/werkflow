@@ -7,7 +7,7 @@ from typing import (
 )
 from werkflow.hooks.types.base.base_hook import BaseHook
 from werkflow.hooks.types.base.hook_types import HookType
-from werkflow.hooks.prompt.types.base.base_prompt import BasePrompt
+from werkflow.prompt.types.base.base_prompt import BasePrompt
 
 
 class StepHook(BaseHook):

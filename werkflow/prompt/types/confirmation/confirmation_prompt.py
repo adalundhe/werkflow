@@ -8,8 +8,8 @@ from typing import (
     Dict,
     Union
 )
-from werkflow.hooks.prompt.types.base.base_prompt import BasePrompt
-from werkflow.hooks.prompt.types.base.prompt_type import PromptType
+from werkflow.prompt.types.base.base_prompt import BasePrompt
+from werkflow.prompt.types.base.prompt_type import PromptType
 from .confirmation_prompt_validator import ConfirmationPromptValidator
 
 

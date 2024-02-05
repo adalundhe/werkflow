@@ -1,17 +1,17 @@
 import os
-from setuptools import (
-    setup,
-    find_packages
-)
+
+from setuptools import find_packages, setup
 
 current_directory = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(current_directory, 'README.md'), "r") as readme:
     package_description = readme.read()
 
-version_string = ""
-with open (os.path.join(current_directory, ".version"), 'r') as version_file:
-    version_string = version_file.read()
+version_string = "0.1.4"
+version_path = os.path.join(current_directory, ".version")
+if os.path.exists(version_path):
+    with open (os.path.join(current_directory, ".version"), 'r') as version_file:
+        version_string = version_file.read()
 
 setup(
     name="werkflow",

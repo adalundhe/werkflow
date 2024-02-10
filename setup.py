@@ -50,7 +50,8 @@ setup(
         'aiologger',
         'yaspin',
         'art',
-        'python-dotenv'
+        'python-dotenv',
+        'orjson'
     ],
     entry_points = {
         'console_scripts': [

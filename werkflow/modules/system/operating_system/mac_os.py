@@ -1,7 +1,10 @@
 import platform
+
 from werkflow.modules.system.architecture.types import ArchitectureType
+
 from .base import OperatingSystem
 from .types import OperatingSystemType
+
 
 class MacOS(OperatingSystem):
 
@@ -13,7 +16,8 @@ class MacOS(OperatingSystem):
 
         self.supported_architectures = {
             ArchitectureType.ARM_64: 'arm64',
-            ArchitectureType.x86_64: 'x86_64'
+            ArchitectureType.x86_64: 'x86_64',
+            ArchitectureType.AARCH64: 'aarch64',
         }
     
         mac_os_version, _, _ = platform.mac_ver()

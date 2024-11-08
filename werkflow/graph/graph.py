@@ -23,7 +23,6 @@ class Graph:
         workflows: WorkflowGroup,
         no_prompt: bool=False,
         werkflow_config: Dict[str, Any]={},
-        graceful_abort: bool = False
     ) -> None:
 
         self.logger = WerkflowLogger()
@@ -31,7 +30,7 @@ class Graph:
 
         self._no_prompt = no_prompt
         self._werkflow_config = werkflow_config
-        self._graceful_abort = graceful_abort
+        self._graceful_abort = werkflow_config.get('graceful_abort', False)
         self._project_options: Dict[str, Any] = self._werkflow_config.get(
             'project_options', {}
         )

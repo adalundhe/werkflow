@@ -57,12 +57,14 @@ def run(
     logfiles_directory: str,
     graceful_abort: bool,
 ):
-    werkflow_config = {}
+    werkflow_config = {
+        'config_path': config_path,
+        'graceful_abort': graceful_abort
+    }
     if os.path.exists(config_path):
         with open(config_path) as werkflow_config_file:
-            werkflow_config = json.load(werkflow_config_file)
-
-    werkflow_config['config_path'] = config_path
+            werkflow_config_json = json.load(werkflow_config_file)
+            werkflow_config.update(werkflow_config_json)
 
     disabled_loggers = [
         LoggerTypes.DISTRIBUTED,
@@ -101,6 +103,11 @@ def run(
     if len(modules) > 0:
         modules_loaded = ', '.join(module_names)
         logger['console'].sync.info(f'Using modules - {modules_loaded}')
+    
+    if werkflow_config.get('graceful_abort'):
+        logger['console'].sync.info('Graceful abort enabled.')
+
+    logger['console'].sync.info('')
 
     try:
         loop = asyncio.get_event_loop()
@@ -116,7 +123,6 @@ def run(
         workflow,
         no_prompt=no_prompt,
         werkflow_config=werkflow_config,
-        graceful_abort=graceful_abort
     )
 
     graph.setup()

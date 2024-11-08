@@ -1,16 +1,19 @@
 import asyncio
-import networkx
-import inspect
 import functools
-import click
+import inspect
 import os
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
+import click
+import networkx
 from dotenv import dotenv_values
+
 from werkflow.hooks.types.base.base_hook import BaseHook
 from werkflow.hooks.types.base.registrar import registrar
 from werkflow.logging import WerkflowLogger
-from .workflow_group import WorkflowGroup
+
 from .workflow import Workflow
+from .workflow_group import WorkflowGroup
 
 
 class Graph:
@@ -19,7 +22,8 @@ class Graph:
         self,
         workflows: WorkflowGroup,
         no_prompt: bool=False,
-        werkflow_config: Dict[str, Any]={}
+        werkflow_config: Dict[str, Any]={},
+        graceful_abort: bool = False
     ) -> None:
 
         self.logger = WerkflowLogger()
@@ -27,6 +31,7 @@ class Graph:
 
         self._no_prompt = no_prompt
         self._werkflow_config = werkflow_config
+        self._graceful_abort = graceful_abort
         self._project_options: Dict[str, Any] = self._werkflow_config.get(
             'project_options', {}
         )
@@ -172,9 +177,10 @@ class Graph:
 
                 if self.logger.spinner.logger_enabled:
                     async with self.logger.spinner as status_spinner:
-                        results: List[Dict[str, Any]] = await asyncio.gather(*[
+                        results: List[Dict[str, Any] | Exception] = await asyncio.gather(*[
                             asyncio.create_task(hook.call(
-                                **next_args
+                                **next_args,
+                                return_on_failure=self._graceful_abort,
                             )) for hook in generation_hooks
                         ])
 
@@ -182,13 +188,19 @@ class Graph:
                         await status_spinner.ok('✔')
 
                 else:
-                    results: List[Dict[str, Any]] = await asyncio.gather(*[
+                    results: List[Dict[str, Any] | Exception] = await asyncio.gather(*[
                         asyncio.create_task(hook.call(
-                            **next_args
+                            **next_args,
+                            return_on_failure=self._graceful_abort,
                         )) for hook in generation_hooks
                     ])
 
                 for result in results:
+
+                    if isinstance(result, Exception) and self._graceful_abort:
+                        await self.logger.console.aio.error(f'Encountered - {str(result)} - exception while executing. Aborting run.')
+                        return await workflow.close()
+
                     next_args.update({
                         result_key: result_value for result_key, result_value in result.items() if result_value is not None
                     })

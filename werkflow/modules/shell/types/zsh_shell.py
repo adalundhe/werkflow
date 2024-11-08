@@ -1,11 +1,13 @@
 import asyncio
-import subprocess
 import functools
-import pathlib
 import os
+import pathlib
+import shutil
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
+from typing import BinaryIO, Dict, Optional, TextIO, Union
+
 from werkflow.modules.system import System
-from typing import Dict, Union, TextIO, BinaryIO, Optional
 
 
 class ZSHShell:
@@ -193,7 +195,7 @@ class ZSHShell:
             self._executor,
             functools.partial(
                 subprocess.run,
-                [*f"sudo -S -v".split()],
+                [*"sudo -S -v".split()],
                 stdout=output_pipe, 
                 stderr=output_pipe,
                 text=True, 
@@ -569,25 +571,24 @@ class ZSHShell:
             ]
 
             if len(matching_items) > 0:
-                await asyncio.gather(
+                await asyncio.gather(*[
                     self._loop.run_in_executor(
                         self._executor,
                         functools.partial(
-                            os.remove,
+                            shutil.rmtree,
                             matching_path
                         )
                     ) for matching_path in matching_items
-                )
+                ])
 
         elif path_exists:
             await self._loop.run_in_executor(
                 self._executor,
                 functools.partial(
-                    os.remove,
+                    shutil.rmtree,
                     path
                 )
             )
-
 
     async def close(self) -> None:
         self._executor.shutdown()

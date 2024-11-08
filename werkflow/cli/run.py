@@ -42,6 +42,11 @@ from werkflow.modules.base import Module
     default=f'{os.getcwd()}/logs',
     help='Output directory for logfiles. If the directory does not exist it will be created.'
 )
+@click.option(
+    '--graceful-abort',
+    is_flag=True,
+    help='Gracefully abort on any exceptions encountered during execution instead of throwing.'
+)
 @click.argument('path')
 def run(
     ci: bool,
@@ -49,7 +54,8 @@ def run(
     config_path: str,
     path: str,
     log_level: str,
-    logfiles_directory: str
+    logfiles_directory: str,
+    graceful_abort: bool,
 ):
     werkflow_config = {}
     if os.path.exists(config_path):
@@ -109,7 +115,8 @@ def run(
     graph = Graph(
         workflow,
         no_prompt=no_prompt,
-        werkflow_config=werkflow_config
+        werkflow_config=werkflow_config,
+        graceful_abort=graceful_abort
     )
 
     graph.setup()

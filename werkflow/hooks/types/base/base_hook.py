@@ -1,13 +1,9 @@
-import uuid
 import inspect
-from typing import (
-    Callable, 
-    Any, 
-    Tuple, 
-    List,
-    Dict
-)
+import uuid
+from typing import Any, Callable, Dict, List, Tuple
+
 from werkflow.prompt.types.base.base_prompt import BasePrompt
+
 from .hook_types import HookType
 
 
@@ -41,22 +37,36 @@ class BaseHook:
         self.prompts = prompts
         self.condition = condition
 
-    async def call(self, **kwargs):
+    async def call(
+        self, 
+        return_on_failure: bool = True,
+        **kwargs
+    ):
 
         hook_args = {
             name: value for name, value in kwargs.items() if name in self.params
         }
+
+        result = {}
         
-        if self.condition and self.condition(kwargs):
-            result = await self._call(**hook_args)
+        try:
+            if self.condition and self.condition(kwargs):
+                result: Any | Exception = await self._call(**hook_args)
 
-        elif self.condition is None:
-            result = await self._call(**hook_args)
+            elif self.condition is None:
+                result: Any | Exception = await self._call(**hook_args)
 
-        else:
-            result = {}
+        except Exception as execution_error:
+            
+            if return_on_failure:
+                return execution_error
+            
+            raise execution_error
+        
+        if isinstance(result, Exception):
+            return result
 
-        if isinstance(result, dict):
+        elif isinstance(result, dict):
             return {
                 **kwargs,
                 **result

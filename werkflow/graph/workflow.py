@@ -1,24 +1,14 @@
 import asyncio
-import orjson
 from collections import deque
-from typing import (
-    Callable, 
-    Coroutine, 
-    Any, 
-    Tuple, 
-    List, 
-    Deque,
-    Union,
-    Dict,
-    Optional
-)
-from werkflow.modules import (
-    File,
-    Shell,
-    System
-)
+from typing import Any, Callable, Coroutine, Deque, Dict, List, Optional, Tuple, Union
+
+import orjson
+
 from werkflow.logging import WerkflowLogger
+from werkflow.modules import File, Shell, System
+
 from .exceptions import StepTimeoutError
+
 
 class Workflow:
     priority=1
@@ -116,9 +106,7 @@ class Workflow:
     ) -> List[Any]:
 
         completed_jobs: List[Any] = await asyncio.wait_for(
-            asyncio.gather(*[
-                job for job in jobs
-            ]),
+            asyncio.gather(*jobs),
             timeout=timeout
         )
 

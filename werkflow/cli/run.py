@@ -1,27 +1,18 @@
 import asyncio
-import click
-import os
 import json
-from werkflow.cli.signals import add_abort_handler
-from werkflow.cli.import_tools.workflow import import_workflow
-from werkflow.graph import (
-    Graph,
-    WorkflowGroup
-)
-from werkflow.logging import (
-    WerkflowLogger,
-    LoggerTypes,
-    logging_manager
-)
-from werkflow.modules.base import Module
+import os
 from typing import List
 
+import click
 
-@click.group(help='Commands to run and manage workflows.')
-def workflow():
-    pass
+from werkflow.cli.import_tools.workflow import import_workflow
+from werkflow.cli.signals import add_abort_handler
+from werkflow.graph import Graph, WorkflowGroup
+from werkflow.logging import LoggerTypes, WerkflowLogger, logging_manager
+from werkflow.modules.base import Module
 
-@workflow.command(
+
+@click.command(
     help='Run the workflow at the given path or by the given name.'
 )
 @click.option(

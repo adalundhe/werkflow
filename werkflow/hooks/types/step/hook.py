@@ -1,10 +1,12 @@
 from typing import (
-    Callable,
-    Tuple,
     Any,
+    Callable,
+    Dict,
     List,
-    Dict
+    Literal,
+    Tuple,
 )
+
 from werkflow.hooks.types.base.base_hook import BaseHook
 from werkflow.hooks.types.base.hook_types import HookType
 from werkflow.prompt.types.base.base_prompt import BasePrompt
@@ -22,7 +24,18 @@ class StepHook(BaseHook):
             condition: Callable[
                 [Dict[str, Any]],
                 bool
-            ]=None
+            ]=None,
+            checkpoint: Dict[
+                Literal[
+                    'serializer', 
+                    'path', 
+                    'action',
+                ], 
+                str | Literal[
+                    'load', 
+                    'save',
+                ],
+            ] | None = None,
         ) -> None:
 
         super().__init__(
@@ -33,5 +46,7 @@ class StepHook(BaseHook):
             hook_type=HookType.STEP,
             prompts=prompts,
             skip_on_fail=skip_on_fail,
-            condition=condition
+            condition=condition,
         )
+
+        self.checkpoint = checkpoint

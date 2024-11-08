@@ -87,8 +87,8 @@ setup(
         'http': [
             'werkflow-http'
         ],
-        'metrik': [
-            'werkflow-metrik'
+        'metrikflow': [
+            'werkflow-metrikflow'
         ],
         'secrets': [
             'werkflow-secrets'

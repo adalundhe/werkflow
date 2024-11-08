@@ -1,16 +1,17 @@
-import click
 import os
-from typing import List, Union, Optional, Callable, Any
 from importlib.metadata import version
+from typing import Any, Callable, List, Optional, Union
+
+import click
 from art import text2art
+
 from werkflow.logging import WerkflowLogger
 
 
 class CLI(click.MultiCommand):
 
     command_files = {
-        'setup': 'setup.py',
-        'workflow': 'workflow.py'
+        'run': 'run.py'
     }
     logger = WerkflowLogger()
 

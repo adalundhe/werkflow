@@ -1,7 +1,22 @@
-from pydantic import BaseModel, StrictStr, StrictBool
-from werkflow.prompt.types.base.base_prompt import BasePrompt
-from typing import Tuple, List, Optional, Callable, Dict, Any
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+)
 
+from pydantic import BaseModel, StrictBool, StrictStr
+
+from werkflow.prompt.types.base.base_prompt import BasePrompt
+
+
+class StepHookCheckpoint(BaseModel):
+    serializer: Literal['json', 'bytes'] = 'json'
+    action: Literal['load', 'save']
+    path: StrictStr
 
 class StepHookValidator(BaseModel):
     names: Tuple[StrictStr, ...]
@@ -13,6 +28,7 @@ class StepHookValidator(BaseModel):
             bool
         ]
     ]=None
+    checkpoint: StepHookCheckpoint | None = None
 
     class Config:
         arbitrary_types_allowed=True

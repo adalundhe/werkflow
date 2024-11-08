@@ -7,7 +7,7 @@ current_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(current_directory, 'README.md'), "r") as readme:
     package_description = readme.read()
 
-version_string = "0.1.10"
+version_string = "0.1.11"
 version_path = os.path.join(current_directory, ".version")
 if os.path.exists(version_path):
     with open (os.path.join(current_directory, ".version"), 'r') as version_file:

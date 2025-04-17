@@ -2,7 +2,7 @@ import asyncio
 from collections import deque
 from typing import Any, Callable, Coroutine, Deque, Dict, List, Optional, Tuple, Union
 
-import orjson
+import json
 
 from werkflow.logging import WerkflowLogger
 from werkflow.modules import File, Shell, System
@@ -47,15 +47,15 @@ class Workflow:
             silent=True
         )
 
-        current_config: Dict[str, Any] = orjson.loads(current_config)
+        current_config: Dict[str, Any] = json.loads(current_config)
         current_config.update(self.werkflow_config)
 
         await self.shell.pipe_to_file(
             path,
-            orjson.dumps(
+            json.dumps(
                 current_config,
-                option=orjson.OPT_INDENT_2
-            ).decode(),
+                indent=4,
+            ),
             overwrite=True,
             silent=True
         )

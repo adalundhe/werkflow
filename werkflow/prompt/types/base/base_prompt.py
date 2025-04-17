@@ -1,8 +1,8 @@
 import asyncio
 import functools
 import click
+import os
 from concurrent.futures import ThreadPoolExecutor
-from werkflow_system import System
 from termcolor import colored
 from typing import Optional, Any, Callable, Union
 from .base_prompt_validator import BasePromptValidator
@@ -20,11 +20,9 @@ class BasePrompt:
         confirmation_message: Optional[Union[str, Callable[..., str]]] = None, 
     ) -> None:
 
-        system = System()
-
         self._loop: asyncio.AbstractEventLoop = None
         self._executor = ThreadPoolExecutor(
-            max_workers=system.configuration.cores.physical
+            max_workers=os.cpu_count()
         )
 
         self.prompt_color = 'cyan'

@@ -8,12 +8,8 @@ art==6.5
     # via -r requirements.in
 click==8.1.8
     # via -r requirements.in
-distro==1.9.0
-    # via werkflow-system
 networkx==3.4.2
     # via -r requirements.in
-psutil==7.0.0
-    # via werkflow-system
 pydantic==2.11.3
     # via -r requirements.in
 pydantic-core==2.33.1
@@ -30,10 +26,6 @@ typing-extensions==4.13.2
 typing-inspection==0.4.0
     # via pydantic
 werkflow-core==0.1.6
-    # via
-    #   -r requirements.in
-    #   werkflow-system
-werkflow-system==0.3.2
     # via -r requirements.in
 yaspin==3.1.0
     # via -r requirements.in

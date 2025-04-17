@@ -1,6 +1,6 @@
 [project]
 name = "werkflow"
-version = "0.2.1"
+version = "0.2.2"
 description = "Composable workflows for all."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -46,6 +46,7 @@ all = [
     'werkflow-python',
     'werkflow-secrets',
     'werkflow-shell',
+    'werkflow-system',
 ]
 aws = [
     'werkflow-aws',
@@ -79,6 +80,9 @@ secrets = [
 ]
 shell = [
     'werkflow-shell',
+]
+system = [
+    'werkflow-system'
 ]
 
 [project.urls]

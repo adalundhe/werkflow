@@ -1,0 +1,96 @@
+[project]
+name = "werkflow"
+version = "0.2.0"
+description = "Composable workflows for all."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Ada Lundhe", email = "adalundhe@lundhe.audio"}
+]
+classifiers = [
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Operating System :: OS Independent",
+]
+keywords = [
+    'pypi', 
+    'cicd', 
+    'python',
+    'werkflow',
+    'workflow',
+]
+license-files = [ "LICENSE" ]
+dependencies = [
+    'click',
+    'psutil',
+    'distro',
+    'pydantic',
+    'networkx',
+    'aiologger',
+    'yaspin',
+    'art',
+    'python-dotenv',
+    'orjson',
+    'werkflow-core',
+    'werkflow-system',
+]
+
+
+[project.optional-dependencies]
+all = [
+    'werkflow-aws',
+    'werkflow-docker',
+    'werkflow-encryption',
+    'werkflow-file',
+    'werkflow-git',
+    'werkflow-github',
+    'werkflow-http',
+    'werkflow-metrik',
+    'werkflow-python',
+    'werkflow-secrets',
+    'werkflow-shell',
+]
+aws = [
+    'werkflow-aws',
+]
+docker = [
+    'werkflow-docker',
+]
+encryption = [
+    'werkflow-encryption',
+]
+file = [
+    'werkflow-file',
+]
+git = [
+    'werkflow-git',
+]
+github = [
+    'werkflow-github',
+]
+http = [
+    'werkflow-http',
+]
+metrikflow = [
+    'werkflow-metrikflow',
+]
+python = [
+    'werkflow-python'
+]
+secrets = [
+    'werkflow-secrets',
+]
+shell = [
+    'werkflow-shell',
+]
+
+[project.urls]
+Homepage = "https://github.com/adalundhe/werkflow"
+
+[project.scripts]
+werkflow = "werkflow.cli:run"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

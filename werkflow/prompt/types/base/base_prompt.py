@@ -2,9 +2,9 @@ import asyncio
 import functools
 import click
 from concurrent.futures import ThreadPoolExecutor
-from werkflow.modules.system import System
+from werkflow_system import System
 from termcolor import colored
-from typing import Optional, Any, Callable, Union, Dict
+from typing import Optional, Any, Callable, Union
 from .base_prompt_validator import BasePromptValidator
 
 

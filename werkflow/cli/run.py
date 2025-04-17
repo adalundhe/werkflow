@@ -9,7 +9,7 @@ from werkflow.cli.import_tools.workflow import import_workflow
 from werkflow.cli.signals import add_abort_handler
 from werkflow.graph import Graph, WorkflowGroup
 from werkflow.logging import LoggerTypes, WerkflowLogger, logging_manager
-from werkflow.modules.base import Module
+from werkflow_core import Module
 
 
 @click.command(

@@ -7,7 +7,7 @@ from werkflow.cli.exceptions import (
     EmptyWorkflowFileError
 )
 from werkflow.graph import Workflow, WorkflowGroup
-from werkflow.modules.base import Module
+from werkflow_core import Module
 from pathlib import Path
 
 def import_workflow(path: str) -> Dict[str, Union[Workflow, Module]]:

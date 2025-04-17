@@ -1,4 +1,4 @@
-from werkflow.modules.base import Module
+from werkflow_core import Module
 from pydantic import BaseModel, validator
 from typing import Tuple, Type
 

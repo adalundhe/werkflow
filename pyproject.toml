@@ -1,6 +1,6 @@
 [project]
 name = "werkflow"
-version = "0.2.2"
+version = "0.3.0"
 description = "Composable workflows for all."
 readme = "README.md"
 requires-python = ">=3.11"

@@ -6,3 +6,6 @@ yaspin
 art
 python-dotenv
 werkflow-core
+werkflow-file
+werkflow-system
+werkflow-shell

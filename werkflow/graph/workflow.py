@@ -2,10 +2,7 @@ import asyncio
 from collections import deque
 from typing import Any, Callable, Coroutine, Deque, Dict, List, Optional, Tuple, Union
 
-import json
-
 from werkflow.logging import WerkflowLogger
-from werkflow.modules import File, Shell, System
 
 from .exceptions import StepTimeoutError
 
@@ -14,9 +11,6 @@ class Workflow:
     priority=1
 
     def __init__(self) -> None: 
-        self.file = File()
-        self.system = System()
-        self.shell = Shell()
 
         self.pending: Deque[asyncio.Task] = deque()
         self.logger = WerkflowLogger()
@@ -29,36 +23,6 @@ class Workflow:
     ): 
         options: Dict[str, Any] = self.werkflow_config.get('project_options')
         return options.get(option_name)
-
-    async def update_project_options(
-        self,
-        option_name: str,
-        data: Any
-    ):
-        options: Dict[str, Any] = dict(self.werkflow_config.get('project_options'))
-        options[option_name] = data
-
-        self.werkflow_config['project_options'] = options
-
-        path: str = self.werkflow_config.get('config_path')
-        
-        current_config: str = await self.shell.read_file(
-            path,
-            silent=True
-        )
-
-        current_config: Dict[str, Any] = json.loads(current_config)
-        current_config.update(self.werkflow_config)
-
-        await self.shell.pipe_to_file(
-            path,
-            json.dumps(
-                current_config,
-                indent=4,
-            ),
-            overwrite=True,
-            silent=True
-        )
 
     async def as_async(
         self,
@@ -173,9 +137,7 @@ class Workflow:
             return error
 
     async def close(self):
-        await self.system.close()
-        await self.shell.close()
+        pass
 
     def abort(self):
-        self.system.abort()
-        self.shell.abort()
+        pass

@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import sys
 from typing import List
 
 import click
@@ -133,7 +134,19 @@ def run(
         graph
     )
 
-    loop.run_until_complete(graph.run())    
+    succeeded = loop.run_until_complete(graph.run())
+
+    if graph.failed or succeeded is False:
+        if logger.spinner.logger_enabled:
+            logger.console.sync.error(
+                f'\nGraph - {workflow.__class__.__name__} - failed! '
+                f'{graph.logger.spinner.display.total_timer.elapsed_message}\n'
+            )
+        else:
+            logger.console.sync.error(
+                f'\nGraph - {workflow.__class__.__name__} - failed!\n'
+            )
+        sys.exit(1)
 
     if logger.spinner.logger_enabled:
         logger.console.sync.info(f'\nGraph - {workflow.__class__.__name__} - completed! {graph.logger.spinner.display.total_timer.elapsed_message}\n')

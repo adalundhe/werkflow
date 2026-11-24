@@ -8,7 +8,7 @@ from typing import (
     Tuple,
 )
 
-from pydantic import BaseModel, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
 
 from werkflow.prompt.types.base.base_prompt import BasePrompt
 
@@ -19,6 +19,8 @@ class StepHookCheckpoint(BaseModel):
     path: StrictStr
 
 class StepHookValidator(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     names: Tuple[StrictStr, ...]
     prompts: List[BasePrompt]=[]
     skip_on_fail: StrictBool
@@ -29,7 +31,4 @@ class StepHookValidator(BaseModel):
         ]
     ]=None
     checkpoint: StepHookCheckpoint | None = None
-
-    class Config:
-        arbitrary_types_allowed=True
 

@@ -1,6 +1,6 @@
 [project]
 name = "werkflow"
-version = "0.3.0"
+version = "0.4.0"
 description = "Composable workflows for all."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -42,7 +42,7 @@ all = [
     'werkflow-git',
     'werkflow-github',
     'werkflow-http',
-    'werkflow-metrik',
+    'werkflow-metrikflow',
     'werkflow-python',
     'werkflow-secrets',
     'werkflow-shell',

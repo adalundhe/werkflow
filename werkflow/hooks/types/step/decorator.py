@@ -30,7 +30,9 @@ def step(
 ):
     
     validated_checkpoint: StepHookCheckpoint | None = None
-    if validated_checkpoint:
+    if isinstance(checkpoint, StepHookCheckpoint):
+        validated_checkpoint = checkpoint
+    elif checkpoint is not None:
         validated_checkpoint = StepHookCheckpoint(**checkpoint)
 
     StepHookValidator(

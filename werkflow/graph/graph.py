@@ -12,6 +12,7 @@ from werkflow.hooks.types.base.base_hook import BaseHook
 from werkflow.hooks.types.base.registrar import registrar
 from werkflow.logging import WerkflowLogger
 
+from .exceptions import UnknownStepDependencyError
 from .workflow import Workflow
 from .workflow_group import WorkflowGroup
 
@@ -34,6 +35,8 @@ class Graph:
         self._project_options: Dict[str, Any] = self._werkflow_config.get(
             'project_options', {}
         )
+        self.failed: bool = False
+        self.errors: List[Exception] = []
 
         self._env = {}
         
@@ -87,8 +90,14 @@ class Graph:
             
             for hook in workflow_hooks.values():
                 for dependency in hook.names:
-                    if workflow_graph.nodes.get(dependency):
-                        workflow_graph.add_edge(dependency, hook.shortname)
+                    if dependency not in workflow_graph.nodes:
+                        raise UnknownStepDependencyError(
+                            workflow_name=workflow_name,
+                            step_name=hook.shortname,
+                            dependency_name=dependency,
+                            available_steps=list(workflow_hooks.keys()),
+                        )
+                    workflow_graph.add_edge(dependency, hook.shortname)
 
             execution_order: List[List[str]] = [
                 generation for generation in networkx.topological_generations(workflow_graph)
@@ -98,7 +107,9 @@ class Graph:
             self._workflow_hooks[workflow_name] = workflow_hooks
             self._graphs[workflow_name] = workflow_graph
 
-    async def run(self):
+    async def run(self) -> bool:
+        self.failed = False
+        self.errors = []
 
         next_args: Dict[str, Any] = dict(self._project_options)
 
@@ -174,36 +185,71 @@ class Graph:
 
                             prompt.close()
 
-                if self.logger.spinner.logger_enabled:
-                    async with self.logger.spinner as status_spinner:
-                        results: List[Dict[str, Any] | Exception] = await asyncio.gather(*[
+                try:
+                    if self.logger.spinner.logger_enabled:
+                        async with self.logger.spinner as status_spinner:
+                            results: List[Dict[str, Any] | Exception] = await asyncio.gather(*[
+                                asyncio.create_task(hook.call(
+                                    **next_args,
+                                    return_on_failure=self._graceful_abort or hook.skip_on_fail,
+                                )) for hook in generation_hooks
+                            ])
+
+                            has_fatal_error = any(
+                                isinstance(res, Exception) and not hook.skip_on_fail
+                                for hook, res in zip(generation_hooks, results)
+                            )
+                            status_spinner.group_finalize()
+                            if has_fatal_error:
+                                await status_spinner.fail('✖')
+                            else:
+                                await status_spinner.ok('✔')
+
+                    else:
+                        results = await asyncio.gather(*[
                             asyncio.create_task(hook.call(
                                 **next_args,
-                                return_on_failure=self._graceful_abort,
+                                return_on_failure=self._graceful_abort or hook.skip_on_fail,
                             )) for hook in generation_hooks
                         ])
+                except Exception as exc:
+                    self.failed = True
+                    self.errors.append(exc)
+                    await workflow.close()
+                    raise
 
-                        status_spinner.group_finalize()
-                        await status_spinner.ok('✔')
-
-                else:
-                    results: List[Dict[str, Any] | Exception] = await asyncio.gather(*[
-                        asyncio.create_task(hook.call(
-                            **next_args,
-                            return_on_failure=self._graceful_abort,
-                        )) for hook in generation_hooks
-                    ])
-
-                for result in results:
-
-                    if isinstance(result, Exception) and self._graceful_abort:
-                        await self.logger.console.aio.error(f'Encountered - {str(result)} - exception while executing. Aborting run.')
-                        return await workflow.close()
+                fatal_errors: List[Exception] = []
+                for hook, result in zip(generation_hooks, results):
+                    if isinstance(result, Exception):
+                        if hook.skip_on_fail:
+                            await self.logger.console.aio.warning(
+                                f"Step '{hook.shortname}' failed ({result}); skipping due to skip_on_fail."
+                            )
+                            continue
+                        fatal_errors.append(result)
+                        continue
 
                     next_args.update({
-                        result_key: result_value for result_key, result_value in result.items() if result_value is not None
+                        result_key: result_value
+                        for result_key, result_value in result.items()
+                        if result_value is not None
                     })
 
+                if fatal_errors:
+                    self.failed = True
+                    self.errors.extend(fatal_errors)
+                    first_error = fatal_errors[0]
+                    if self._graceful_abort:
+                        await self.logger.console.aio.error(
+                            f'Encountered - {str(first_error)} - exception while executing. Aborting run.'
+                        )
+                        await workflow.close()
+                        return False
+                    await workflow.close()
+                    raise first_error
+
             await workflow.close()
+
+        return True
 
        

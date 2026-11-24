@@ -6,7 +6,7 @@ import signal
 import functools
 import inspect
 from enum import Enum
-from os import get_terminal_size
+from shutil import get_terminal_size
 from typing import List, Mapping, Any, Dict, Coroutine
 from asyncio import Task
 from yaspin.core import Yaspin
@@ -17,6 +17,20 @@ from werkflow.logging.spinner import ProgressText
 from yaspin.core import to_unicode
 from .async_logger import AsyncLogger
 from .logger_types import LoggerTypes
+
+
+def _stdout_is_tty() -> bool:
+    try:
+        return bool(sys.stdout is not None and sys.stdout.isatty())
+    except Exception:
+        return False
+
+
+def _get_event_loop() -> asyncio.AbstractEventLoop:
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.get_event_loop()
 
 
 class LoggerMode(Enum):
@@ -54,12 +68,13 @@ class AsyncSpinner(Yaspin):
         timer: bool=False,
         enabled: bool=True
     ):
+        is_tty = _stdout_is_tty()
         super().__init__(
             spinner, 
             text, 
-            color, 
-            on_color, 
-            attrs, 
+            color if is_tty else None, 
+            on_color if is_tty else None, 
+            attrs if is_tty else None, 
             reversal, 
             side, 
             sigmap, 
@@ -76,12 +91,21 @@ class AsyncSpinner(Yaspin):
         self.logger.initialize('%(message)s')
         self.display = text
 
-        self.enabled = enabled
+        self.enabled = enabled and is_tty
         self.logger_enabled = logger_enabled
         self.logger_mode = LoggerMode.CONSOLE
 
-        self._stdout_lock = asyncio.Lock()
-        self._loop = asyncio.get_event_loop()
+        self._stdout_lock: asyncio.Lock | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+
+    def _get_lock(self) -> asyncio.Lock:
+        if self._stdout_lock is None:
+            self._stdout_lock = asyncio.Lock()
+        return self._stdout_lock
+
+    def _active_loop(self) -> asyncio.AbstractEventLoop:
+        self._loop = _get_event_loop()
+        return self._loop
 
     @property
     def console(self):
@@ -117,137 +141,97 @@ class AsyncSpinner(Yaspin):
             self.display.cli_messages[message_index] = message
 
     def finalize(self):
+        self.display.total_timer.update()
         self.display.finalized = True
 
     def group_finalize(self):
+        self.display.total_timer.update()
+        self.display.group_timer.update()
         self.display.group_finalized = True
 
     async def debug(self, message: str, *args: List[Any], **kwargs: Mapping[str, Any]) -> Task:
-        
         if self.logger_enabled:
-            await self._stdout_lock.acquire()
-            await self._clear_line()
-
-            # Ensure output is Unicode
-
-            log_result = await self.logger.debug(
-                message,
-                *args,
-                **kwargs
-            )
-
-            self._cur_line_len = 0
-            self._stdout_lock.release()
-
-            return log_result
+            async with self._get_lock():
+                await self._clear_line()
+                log_result = await self.logger.debug(
+                    message,
+                    *args,
+                    **kwargs
+                )
+                self._cur_line_len = 0
+                return log_result
 
     async def info(self, message: str, *args: List[Any], **kwargs: Mapping[str, Any]) -> Task:
-
         if self.logger_enabled:
-            await self._stdout_lock.acquire()
-            await self._clear_line()
-
-            # Ensure output is Unicode
-
-            log_result = await self.logger.info(
-                message,
-                *args,
-                **kwargs
-            )
-
-            self._cur_line_len = 0
-            self._stdout_lock.release()
-            
-            return log_result
+            async with self._get_lock():
+                await self._clear_line()
+                log_result = await self.logger.info(
+                    message,
+                    *args,
+                    **kwargs
+                )
+                self._cur_line_len = 0
+                return log_result
 
     async def warning(self, message: str, *args: List[Any], **kwargs: Mapping[str, Any]) -> Task:
-        
         if self.logger_enabled:
-            await self._stdout_lock.acquire()
-            await self._clear_line()
-
-            # Ensure output is Unicode
-
-            log_result = await self.logger.warning(
-                message,
-                *args,
-                **kwargs
-            )
-
-            self._cur_line_len = 0
-            self._stdout_lock.release()
-            return log_result
+            async with self._get_lock():
+                await self._clear_line()
+                log_result = await self.logger.warning(
+                    message,
+                    *args,
+                    **kwargs
+                )
+                self._cur_line_len = 0
+                return log_result
 
     async def warn(self, message: str, *args: List[Any], **kwargs: Mapping[str, Any]) -> Task:
-        if self.logger_enabled:  
-            await self._stdout_lock.acquire()
-            await self._clear_line()
-
-            # Ensure output is Unicode
-
-            log_result = await self.logger.warn(
-                message,
-                *args,
-                **kwargs
-            )
-
-            self._cur_line_len = 0
-            self._stdout_lock.release()
-            return log_result
+        if self.logger_enabled:
+            async with self._get_lock():
+                await self._clear_line()
+                log_result = await self.logger.warn(
+                    message,
+                    *args,
+                    **kwargs
+                )
+                self._cur_line_len = 0
+                return log_result
 
     async def error(self, message: str, *args: List[Any], **kwargs: Mapping[str, Any]) -> Task:
-        
         if self.logger_enabled:
-            await self._stdout_lock.acquire()
-            await self._clear_line()
-
-            # Ensure output is Unicode
-
-            log_result = await self.logger.error(
-                message,
-                *args,
-                **kwargs
-            )
-
-            self._cur_line_len = 0
-            self._stdout_lock.release()
-            return log_result
+            async with self._get_lock():
+                await self._clear_line()
+                log_result = await self.logger.error(
+                    message,
+                    *args,
+                    **kwargs
+                )
+                self._cur_line_len = 0
+                return log_result
 
     async def critical(self, message: str, *args: List[Any], **kwargs: Mapping[str, Any]) -> Task:
-        
         if self.logger_enabled:
-            await self._stdout_lock.acquire()
-            await self._clear_line()
+            async with self._get_lock():
+                await self._clear_line()
+                log_result = await self.logger.critical(
+                    message,
+                    *args,
+                    **kwargs
+                )
+                self._cur_line_len = 0
+                return log_result
 
-            # Ensure output is Unicode
-
-            log_result = await self.logger.critical(
-                message,
-                *args,
-                **kwargs
-            )
-
-            self._cur_line_len = 0
-            self._stdout_lock.release()
-            return log_result
-    
     async def fatal(self, message: str, *args: List[Any], **kwargs: Mapping[str, Any]) -> Task:
-        
         if self.logger_enabled:
-            await self._stdout_lock.acquire()
-            await self._clear_line()
-
-            # Ensure output is Unicode
-
-            log_result = await self.logger.fatal(
-                message,
-                *args,
-                **kwargs
-            )
-
-            self._cur_line_len = 0
-            self._stdout_lock.release()
-            return log_result
+            async with self._get_lock():
+                await self._clear_line()
+                log_result = await self.logger.fatal(
+                    message,
+                    *args,
+                    **kwargs
+                )
+                self._cur_line_len = 0
+                return log_result
 
     async def __aenter__(self):
 
@@ -262,7 +246,12 @@ class AsyncSpinner(Yaspin):
 
         enabled = self.enabled and self.logger_enabled
 
-        if enabled and self._spin_thread.done() is False and self._spin_thread.cancelled() is False:
+        if (
+            enabled
+            and self._spin_thread is not None
+            and self._spin_thread.done() is False
+            and self._spin_thread.cancelled() is False
+        ):
             await self.stop()
             
         return False  # nothing is handled
@@ -328,7 +317,7 @@ class AsyncSpinner(Yaspin):
 
             # flush the stdout buffer so the current line
             # can be rewritten to
-            await self._loop.run_in_executor(
+            await self._active_loop().run_in_executor(
                 None,
                 sys.stdout.flush
             )  
@@ -350,25 +339,29 @@ class AsyncSpinner(Yaspin):
             """Write text in the terminal without breaking the spinner."""
             # similar to tqdm.write()
             # https://pypi.python.org/pypi/tqdm#writing-messages
-            await self._stdout_lock.acquire()
-            await self._clear_line()
+            async with self._get_lock():
+                await self._clear_line()
 
-            if isinstance(text, (str, bytes)):
-                _text = to_unicode(text)
-            else:
-                _text = str(text)
+                if isinstance(text, (str, bytes)):
+                    _text = to_unicode(text)
+                else:
+                    _text = str(text)
 
-            # Ensure output is Unicode
-            assert isinstance(_text, str)
+                # Ensure output is Unicode
+                assert isinstance(_text, str)
 
-            await self._loop.run_in_executor(
-                None,
-                sys.stdout.write,
-                
-            )
+                loop = self._active_loop()
+                await loop.run_in_executor(
+                    None,
+                    sys.stdout.write,
+                    f"{_text}\n",
+                )
+                await loop.run_in_executor(
+                    None,
+                    sys.stdout.flush,
+                )
 
-            self._cur_line_len = 0    
-            self._stdout_lock.release()  
+                self._cur_line_len = 0
 
     async def ok(self, text="OK"):
         if self.enabled:
@@ -394,7 +387,7 @@ class AsyncSpinner(Yaspin):
         await self.stop()
         
 
-        await self._loop.run_in_executor(
+        await self._active_loop().run_in_executor(
             None,
             sys.stdout.write,
             self._last_frame
@@ -410,69 +403,67 @@ class AsyncSpinner(Yaspin):
                 await asyncio.sleep(self._interval)
                 continue
             
-            await self._stdout_lock.acquire()
-            terminal_size = await self._loop.run_in_executor(
-                None,
-                get_terminal_size
-            )
+            async with self._get_lock():
+                loop = self._active_loop()
+                terminal_size = await loop.run_in_executor(
+                    None,
+                    functools.partial(get_terminal_size, fallback=(80, 24)),
+                )
 
-            terminal_width = terminal_size[0]
+                terminal_width = terminal_size[0]
 
-            # Compose output
-            spin_phase = next(self._cycle)
-            out = self._compose_out(spin_phase)
+                # Compose output
+                spin_phase = next(self._cycle)
+                out = self._compose_out(spin_phase)
 
-            if len(out) > terminal_width:
-                out = f'{out[:terminal_width-1]}...'
+                if len(out) > terminal_width:
+                    out = f'{out[:terminal_width-1]}...'
 
-            # Write
-               
-            await self._clear_line()
-            
-            await self._loop.run_in_executor(
-                None,
-                sys.stdout.write,
-                out
-            )
+                # Write
+                await self._clear_line()
+                
+                await loop.run_in_executor(
+                    None,
+                    sys.stdout.write,
+                    out
+                )
 
-            await self._loop.run_in_executor(
-                None,
-                sys.stdout.flush
-            )
+                await loop.run_in_executor(
+                    None,
+                    sys.stdout.flush
+                )
 
-            self._cur_line_len = max(self._cur_line_len, len(out))
+                self._cur_line_len = max(self._cur_line_len, len(out))
 
-            # Wait
-            try:
-                await asyncio.wait_for(self._stop_spin.wait(), timeout=self._interval)
+                # Wait
+                try:
+                    await asyncio.wait_for(self._stop_spin.wait(), timeout=self._interval)
 
-            except asyncio.TimeoutError:
-                pass
-
-            self._stdout_lock.release()
+                except asyncio.TimeoutError:
+                    pass
 
     async def _clear_line(self):
-        if sys.stdout.isatty():
+        loop = self._active_loop()
+        if _stdout_is_tty():
             # ANSI Control Sequence EL does not work in Jupyter
-            await self._loop.run_in_executor(
+            await loop.run_in_executor(
                 None,
                 sys.stdout.write,
                 "\r\033[K"
             )
 
-        else:
+        elif self._cur_line_len > 0:
             fill = " " * self._cur_line_len
-            await self._loop.run_in_executor(
+            await loop.run_in_executor(
                 None,
-                sys.stdout.write,
                 sys.stdout.write,
                 f"\r{fill}\r"
             )
             
     @staticmethod
     async def _show_cursor():
-        loop = asyncio.get_event_loop()
-        if sys.stdout.isatty():
+        loop = _get_event_loop()
+        if _stdout_is_tty():
             # ANSI Control Sequence DECTCEM 1 does not work in Jupyter
             await loop.run_in_executor(
                 None,
@@ -487,8 +478,8 @@ class AsyncSpinner(Yaspin):
 
     @staticmethod
     async def _hide_cursor():
-        loop = asyncio.get_event_loop()
-        if sys.stdout.isatty():
+        loop = _get_event_loop()
+        if _stdout_is_tty():
             # ANSI Control Sequence DECTCEM 1 does not work in Jupyter
             await loop.run_in_executor(
                 None,
@@ -528,11 +519,11 @@ class AsyncSpinner(Yaspin):
                 # function.
                 sig_handler = functools.partial(sig_handler, spinner=self)
 
-            self._loop.add_signal_handler(getattr(signal, sig.name),
+            self._active_loop().add_signal_handler(getattr(signal, sig.name),
                             lambda signame=sig.name: asyncio.create_task(sig_handler(self)))
 
     def _reset_signal_handlers(self):
         for sig, sig_handler in self._dfl_sigmap.items():
-            self._loop.add_signal_handler(getattr(signal, sig.name),
+            self._active_loop().add_signal_handler(getattr(signal, sig.name),
                             lambda signame=sig.name: asyncio.create_task(sig_handler(signame, self)))
 

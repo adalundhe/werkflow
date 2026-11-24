@@ -16,7 +16,7 @@ class BaseHook:
         call: Callable[..., Any],
         *names: Tuple[str, ...],
         hook_type: HookType=None,
-        prompts: List[BasePrompt]=[],
+        prompts: List[BasePrompt] | None = None,
         skip_on_fail: bool=False,
         condition: Callable[
             [Dict[str, Any]],
@@ -34,7 +34,7 @@ class BaseHook:
         self.skip_on_fail = skip_on_fail
         self.namespace: str = None
         self.workflow: str = None
-        self.prompts = prompts
+        self.prompts = list(prompts) if prompts is not None else []
         self.condition = condition
 
     async def call(
@@ -47,33 +47,29 @@ class BaseHook:
             name: value for name, value in kwargs.items() if name in self.params
         }
 
-        result = {}
-        
-        try:
-            if self.condition and self.condition(kwargs):
-                result: Any | Exception = await self._call(**hook_args)
+        if self.condition is not None and not self.condition(kwargs):
+            return {}
 
-            elif self.condition is None:
-                result: Any | Exception = await self._call(**hook_args)
+        try:
+            result: Any | Exception = await self._call(**hook_args)
 
         except Exception as execution_error:
-            
-            if return_on_failure:
+            if return_on_failure or self.skip_on_fail:
                 return execution_error
-            
             raise execution_error
         
         if isinstance(result, Exception):
-            return result
+            if return_on_failure or self.skip_on_fail:
+                return result
+            raise result
 
-        elif isinstance(result, dict):
-            return {
-                **kwargs,
-                **result
-            }
+        if result is None:
+            return {}
+
+        if isinstance(result, dict):
+            return dict(result)
         
         return {
-            **kwargs,
             self.shortname: result
         }
 

@@ -1,12 +1,12 @@
 import hashlib
 import secrets
+from typing import Any
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from werkflow.connections.env import Env
 
 
 class AESGCMFernet:
 
-    def __init__(self, env: Env) -> None:
+    def __init__(self, env: Any) -> None:
         self.secret = env.MERCURY_SYNC_AUTH_SECRET
         if not self.secret:
             raise ValueError("MERCURY_SYNC_AUTH_SECRET must be set.")
